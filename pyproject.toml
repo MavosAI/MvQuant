@@ -1,0 +1,30 @@
+[tool.poetry]
+name = "mvquant"
+version = "0.1.0"
+description = "Vietnam Stock Exchange Forecasting Framework"
+authors = []
+license = "MIT"
+readme = "README.md"
+
+packages = [{include = "mvquant", from = "src"}]
+
+[tool.poetry.dependencies]
+python = ">=3.8,<3.9.7 || >3.9.7,<4.0"
+torch = {version = "^2.0.0", source = "pytorch"}
+pmdarima = ">=2.0.3,<3.0"
+pandas = ">=1.5.3,<2.0"
+plotly = ">=5.13.1,<6.0"
+streamlit = ">=1.27.0,<2.0"
+scikit-learn = ">=1.2.2,<2.0"
+
+[[tool.poetry.source]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cpu"
+priority = "explicit"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
