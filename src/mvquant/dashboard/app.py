@@ -235,9 +235,9 @@ def plot_forecast(
 def main():
     st.set_page_config(layout="wide", initial_sidebar_state="expanded", page_title="Mavos Forecast")
     st.title("VIET NAM STOCK INDICES FORECASTING")
-    st.text("We apply univariate forecasting to predict stock indices!")
+    st.markdown("We apply univariate forecasting to predict stock indices!")
     st.markdown(
-        'The forecasting implementation of the paper "[Are Transformers Effective for Time Series Forecasting?](https://arxiv.org/pdf/2205.13504.pdf)"'
+        'The forecasting implementation of the paper "[Are Transformers Effective for Time Series Forecasting?](https://arxiv.org/abs/2205.13504)"'
     )
     if st.button("Clear all cache"):
         st.cache_resource.clear()

@@ -15,8 +15,8 @@ MvQuant is a Python-based framework for stock forecasting. It provides a collect
 ## Installation
 
 You can install MvQuant using pip:
-
 ```bash
+git clone https://github.com/MavosAI/MvQuant.git && cd MvQuant
 pip install -r requirement.txt
 ```
 

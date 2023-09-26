@@ -25,6 +25,11 @@ priority = "explicit"
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 
+[[tool.poetry_bumpversion.replacements]]
+files = ["src/mvquant/__init__.py"]
+search = '__version__ = "{current_version}"'
+replace = '__version__ = "{new_version}"'
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
