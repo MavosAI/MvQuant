@@ -3,7 +3,7 @@
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://mvquant.streamlit.app)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-Mvquant is a Python-based framework for stock forecasting. It provides a collection of tools and models to help you predict stock prices and make informed investment decisions.
+MvQuant is a Python-based framework for stock forecasting. It provides a collection of tools and models to help you predict stock prices and make informed investment decisions.
 
 ## Features
 
@@ -14,7 +14,7 @@ Mvquant is a Python-based framework for stock forecasting. It provides a collect
 
 ## Installation
 
-You can install mvquant using pip:
+You can install MvQuant using pip:
 
 ```bash
 pip install -r requirement.txt
@@ -28,7 +28,7 @@ streamlit run src/mvquant/dashboard/app.py
 For more detailed usage examples and documentation, please refer to the documentation.
 
 ## Contributing
-We welcome contributions from the community. If you would like to contribute to mvquant, please read our contributing guidelines for more information.
+We welcome contributions from the community. If you would like to contribute to MvQuant, please read our contributing guidelines for more information.
 
 ## License
 This project is licensed under the MIT License - see the LICENSE file for details.
