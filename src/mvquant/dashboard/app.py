@@ -246,7 +246,24 @@ def main():
     plot_forecast(symbol="VNINDEX", model_type=model_type)
     plot_forecast(symbol="HNXINDEX", model_type=model_type)
     plot_forecast(symbol="UPINDEX", model_type=model_type)
+    # About
+    st.sidebar.header("About")
+    st.sidebar.info(
+        "MvQuant is a Python-based framework for stock forecasting. "
+        "It provides various tools and models to predict stock prices and make informed investment decisions."
+    )
 
+    # Contact Information
+    st.sidebar.header("Contact")
+    st.sidebar.text("Have questions or suggestions?")
+    st.sidebar.text("Contact us at ducquoc2211@email.com")
+
+    # GitHub Link
+    st.sidebar.header("GitHub Repository")
+    st.sidebar.markdown("[![GitHub Repo](https://img.shields.io/badge/GitHub-Repository-blue?logo=github)](https://github.com/MavosAI/mvquant)")
+
+    # Footer
+    st.sidebar.text("Powered by MvQuant")
 
 if __name__ == "__main__":
     main()
