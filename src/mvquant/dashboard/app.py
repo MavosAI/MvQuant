@@ -46,7 +46,6 @@ configs = SimpleNamespace(
 )
 
 
-@st.cache_resource
 def load_model(symbol, model_type, model_path="./src/mvquant/models/checkpoints"):
     model_path = Path(model_path) / f"model_{symbol}_{model_type}.pth"
     models = dict(
@@ -61,7 +60,6 @@ def load_model(symbol, model_type, model_path="./src/mvquant/models/checkpoints"
     return model, scaler
 
 
-@st.cache_data
 def plot_forecast(
     symbol = "VNINDEX",
     model_type = "dlinear",
@@ -239,9 +237,6 @@ def main():
     st.markdown(
         'The forecasting implementation of the paper "[Are Transformers Effective for Time Series Forecasting?](https://arxiv.org/abs/2205.13504)"'
     )
-    if st.button("Clear all cache"):
-        st.cache_resource.clear()
-        st.cache_data.clear()
     model_type = st.selectbox("Model Type", options=["DLinear"])
     plot_forecast(symbol="VNINDEX", model_type=model_type)
     plot_forecast(symbol="HNXINDEX", model_type=model_type)
