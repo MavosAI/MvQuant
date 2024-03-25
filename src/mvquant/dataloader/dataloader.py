@@ -1,7 +1,9 @@
+from __future__ import annotations
+from pathlib import Path
 from sklearn.preprocessing import StandardScaler
 from torch.utils.data import Dataset, DataLoader
 
-from typing import List
+from typing import Any, List
 import os
 import numpy as np
 import pandas as pd
@@ -140,19 +142,19 @@ def time_features(dates, freq="h"):
 class DatasetCustom(Dataset):
     def __init__(
         self,
-        flag="train",
-        size=None,
-        features="S",
-        data_path="data.csv",
-        target="last_closeRaw",
-        date_col="rowDate",
-        scale=True,
-        scaler=None,
-        timeenc=0,
-        freq="d",
-        date_format="%Y/%m/%d",
-        train_only=False,
-        train_test_ratio = (0.7, 0.2)
+        flag: str = "train",
+        size: tuple[int, ...] | None = None,
+        features: str="S",
+        data_path: str | Path ="data.csv",
+        target: str ="last_closeRaw",
+        date_col: str="rowDate",
+        scale: bool=True,
+        scaler: Any=None,
+        timeenc: int=0,
+        freq: str="d",
+        date_format: str ="%Y/%m/%d",
+        train_only: bool=False,
+        train_test_ratio: tuple[float, float] = (0.7, 0.2)
     ):
         # size [seq_len, label_len, pred_len]
         # info

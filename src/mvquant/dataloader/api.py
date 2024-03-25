@@ -1,6 +1,10 @@
+from __future__ import annotations
 import requests
 import pandas as pd
 from datetime import datetime
+import logging
+
+logger = logging.getLogger(__name__)
 
 def get_historical_price_vnd(symbol:str, start_time:int, end_time:int, max_days: int = 365) -> pd.DataFrame:
     """Get historical price from VND
@@ -41,7 +45,7 @@ def get_historical_price_vnd(symbol:str, start_time:int, end_time:int, max_days:
                 'sec-ch-ua-mobile': '?0',
                 'sec-ch-ua-platform': '"Windows"'
             }
-            response = session.get(url, headers=headers, data=payload)
+            response = session.get(url, headers=headers, data=payload, timeout=15)
             df = pd.DataFrame(response.json())
             df.t = pd.to_datetime(df.t, unit='s')
             
@@ -62,7 +66,7 @@ def get_historical_price_vnd(symbol:str, start_time:int, end_time:int, max_days:
         df.sort_values("rowDate", inplace=True)
         return df
     except Exception as e:
-        print(e)
+        logger.info(e, exc_info=True)
     return pd.DataFrame()
     
 
@@ -77,9 +81,15 @@ def get_historical_price_cafef(symbol:str, start_time:str, end_time:str, max_day
     Returns:
         pd.DataFrame: Price DataFrame
     """
+    symbol_convert = {
+        "VNINDEX": "VNINDEX",
+        "HNXINDEX": "HNX-INDEX",
+        "UPINDEX": "UPCOM-INDEX"
+    }
+    symbol = symbol_convert.get(symbol, "")
     try:
-        cookies=None
         total_day = (pd.to_datetime(end_time, format="%m/%d/%Y")  - pd.to_datetime(start_time, format="%m/%d/%Y")).days
+        total_day = total_day if total_day > 0 else 100
         with requests.Session() as session:
             url = f"https://s.cafef.vn/Ajax/PageNew/DataHistory/PriceHistory.ashx?Symbol={symbol}&StartDate={start_time}&EndDate={end_time}&PageIndex=1&PageSize={total_day}"
             payload = {}
@@ -87,7 +97,6 @@ def get_historical_price_cafef(symbol:str, start_time:str, end_time:str, max_day
                 'Accept': '*/*',
                 'Accept-Language': 'en-US,en;q=0.9,vi;q=0.8',
                 'Connection': 'keep-alive',
-                'Cookie': 'ASP.NET_SessionId=2yibk41q4h2aotdmcvb2xvp2; favorite_stocks_state=1; dtdz=9fc6b680-ae5c-4389-b2df-f3241d14dfe4; _gid=GA1.2.1305167968.1695010007; _ga_860L8F5EZP=GS1.1.1695010004.5.1.1695010007.0.0.0; _ga=GA1.1.1531303246.1692260460; _ga_XLBBV02H03=GS1.1.1695007312.2.1.1695012086.0.0.0; _ga_D40MBMET7Z=GS1.1.1695007312.2.1.1695012086.0.0.0',
                 'Referer': 'https://s.cafef.vn/lich-su-giao-dich-vnindex-1.chn',
                 'Sec-Fetch-Dest': 'empty',
                 'Sec-Fetch-Mode': 'cors',
@@ -97,34 +106,31 @@ def get_historical_price_cafef(symbol:str, start_time:str, end_time:str, max_day
                 'sec-ch-ua-mobile': '?0',
                 'sec-ch-ua-platform': '"Windows"'
             }
-            response = session.get(url, headers=headers, data=payload, cookies=cookies)
+            response = session.post(url, headers=headers, data=payload, timeout=30)
             df = pd.DataFrame(response.json()['Data']['Data'])
-            if session.cookies.get_dict():
-                session=session.cookies.get_dict()
-                
             cafef_column_map = {
-            "Ngay": 'rowDate',
-            "GiaDongCua": "last_closeRaw",
-            "GiaMoCua": "last_openRaw",
-            "GiaCaoNhat": "last_maxRaw",
-            "GiaThapNhat": "last_minRaw",
-            "KhoiLuongKhopLenh": "volumeRaw",
+                "Ngay": 'rowDate',
+                "GiaDongCua": "last_closeRaw",
+                "GiaMoCua": "last_openRaw",
+                "GiaCaoNhat": "last_maxRaw",
+                "GiaThapNhat": "last_minRaw",
+                "KhoiLuongKhopLenh": "volumeRaw",
             }
-            df.columns = df.columns.map(cafef_column_map)
-            df = df[list(cafef_column_map.values())]
-            df["rowDate"] = pd.to_datetime(df["rowDate"], format="%Y/%m/%d")
+            df = df[list(cafef_column_map.keys())]
+            df.columns = list(cafef_column_map.values())
+            df["rowDate"] = pd.to_datetime(df["rowDate"], format="%d/%m/%Y")
             numeric_columns = sorted(set(cafef_column_map.values()) - {"rowDate"})
-            df.loc[:, numeric_columns] = df.loc[:, numeric_columns].astype("Float32")
+            df.loc[:, numeric_columns] = df.loc[:, numeric_columns].astype("float32")
             df = df.sort_values("rowDate").reset_index(drop=True)
         return df
     except Exception as e:
-        print(e)
-    return pd.DataFrame()
+        logger.error(f"{e=}", exc_info=True)
+        return pd.DataFrame()
 
 def get_token_fireant(session):
     token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6IkdYdExONzViZlZQakdvNERWdjV4QkRITHpnSSIsImtpZCI6IkdYdExONzViZlZQakdvNERWdjV4QkRITHpnSSJ9.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmZpcmVhbnQudm4iLCJhdWQiOiJodHRwczovL2FjY291bnRzLmZpcmVhbnQudm4vcmVzb3VyY2VzIiwiZXhwIjoxODg5NjIyNTMwLCJuYmYiOjE1ODk2MjI1MzAsImNsaWVudF9pZCI6ImZpcmVhbnQudHJhZGVzdGF0aW9uIiwic2NvcGUiOlsiYWNhZGVteS1yZWFkIiwiYWNhZGVteS13cml0ZSIsImFjY291bnRzLXJlYWQiLCJhY2NvdW50cy13cml0ZSIsImJsb2ctcmVhZCIsImNvbXBhbmllcy1yZWFkIiwiZmluYW5jZS1yZWFkIiwiaW5kaXZpZHVhbHMtcmVhZCIsImludmVzdG9wZWRpYS1yZWFkIiwib3JkZXJzLXJlYWQiLCJvcmRlcnMtd3JpdGUiLCJwb3N0cy1yZWFkIiwicG9zdHMtd3JpdGUiLCJzZWFyY2giLCJzeW1ib2xzLXJlYWQiLCJ1c2VyLWRhdGEtcmVhZCIsInVzZXItZGF0YS13cml0ZSIsInVzZXJzLXJlYWQiXSwianRpIjoiMjYxYTZhYWQ2MTQ5Njk1ZmJiYzcwODM5MjM0Njc1NWQifQ.dA5-HVzWv-BRfEiAd24uNBiBxASO-PAyWeWESovZm_hj4aXMAZA1-bWNZeXt88dqogo18AwpDQ-h6gefLPdZSFrG5umC1dVWaeYvUnGm62g4XS29fj6p01dhKNNqrsu5KrhnhdnKYVv9VdmbmqDfWR8wDgglk5cJFqalzq6dJWJInFQEPmUs9BW_Zs8tQDn-i5r4tYq2U8vCdqptXoM7YgPllXaPVDeccC9QNu2Xlp9WUvoROzoQXg25lFub1IYkTrM66gJ6t9fJRZToewCt495WNEOQFa_rwLCZ1QwzvL0iYkONHS_jZ0BOhBCdW9dWSawD6iF1SIQaFROvMDH1rg"
     return token
-def get_historical_price_fireant(symbol:str, start_time:str, end_time:str, max_days: int =365) -> pd.DataFrame:
+def get_historical_price_fireant(symbol:str, start_time: str | datetime, end_time:str | datetime, max_days: int =365) -> pd.DataFrame:
     """Get historical price from FIREANT
 
     Args:
@@ -141,7 +147,6 @@ def get_historical_price_fireant(symbol:str, start_time:str, end_time:str, max_d
         with requests.Session() as session:
             token = get_token_fireant(session)
             url = f"https://restv2.fireant.vn/symbols/{symbol}/historical-quotes?startDate={start_time}&endDate={end_time}&offset=0&limit={total_day}"
-            print(token)
             payload = {}
             headers = {
                 'authority': 'restv2.fireant.vn',
@@ -158,13 +163,13 @@ def get_historical_price_fireant(symbol:str, start_time:str, end_time:str, max_d
                 'sec-fetch-site': 'same-site',
                 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36'
             }
-            response = session.get(url, headers=headers, data=payload, cookies=cookies)
+            response = session.get(url, headers=headers, data=payload, cookies=cookies, timeout=15)
             df = pd.DataFrame(response.json())
             if session.cookies.get_dict():
                 cookies=session.cookies.get_dict()
                 
             fireant_column_map = {
-                "date": 'rowDate',
+                "date": "rowDate",
                 "priceClose": "last_closeRaw",
                 "priceOpen": "last_openRaw",
                 "priceHigh": "last_maxRaw",
@@ -179,7 +184,7 @@ def get_historical_price_fireant(symbol:str, start_time:str, end_time:str, max_d
             df = df.sort_values("rowDate").reset_index(drop=True)
         return df
     except Exception as e:
-        print(e)
+        logger.info(e, exc_info=True)
     return pd.DataFrame()
 
 def get_vn_holidays() -> pd.DataFrame:
@@ -199,5 +204,5 @@ def get_vn_holidays() -> pd.DataFrame:
         df_holiday = pd.concat(df_holiday).sort_values("Date").reset_index(drop=True)
         return df_holiday
     except Exception as e:
-        print(e)
+        logger.info(e, exc_info=True)
     return pd.DataFrame()

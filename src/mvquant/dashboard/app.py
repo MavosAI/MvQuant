@@ -3,7 +3,7 @@ import pandas as pd
 import os
 import torch
 from mvquant.dataloader.dataloader import DatasetCustom
-from mvquant.dataloader.api import *
+from mvquant.dataloader import api 
 from mvquant.models import DLinear, NLinear, PatchTST
 from pandas.tseries.offsets import BusinessDay
 import plotly.graph_objects as go
@@ -12,7 +12,9 @@ import streamlit as st
 from types import SimpleNamespace
 import click
 from pathlib import Path
+import logging
 
+logger = logging.getLogger(__name__)
 configs = SimpleNamespace(
     task_name="long_term_forecast",
     batch_size=512,
@@ -75,9 +77,21 @@ def plot_forecast(
     data = pd.read_parquet(data_path / f"{symbol}.parquet")
     data.rowDate = pd.to_datetime(data.rowDate, format="%Y-%m-%d")
     df_holiday = pd.read_csv(data_path / holiday_path)
-    start_time = int((data.rowDate.max() + BusinessDay(1)).timestamp())
-    end_time = int(datetime.now(tz=tz).timestamp())
-    actual_df = get_historical_price_vnd(symbol=symbol, start_time=start_time, end_time=end_time)
+
+    try:
+        start_time = (data.rowDate.max() + BusinessDay(1)).strftime("%m/%d/%Y")
+        end_time = datetime.now(tz=tz).strftime("%m/%d/%Y")
+        actual_df = api.get_historical_price_cafef(symbol=symbol, start_time=start_time, end_time=end_time)
+        logger.info(actual_df.head())
+    except Exception as e:
+        logger.error(f"{e=}", exc_info=True)
+        try:
+            start_time = int((data.rowDate.max() + BusinessDay(1)).timestamp())
+            end_time = int(datetime.now(tz=tz).timestamp())
+            actual_df = api.get_historical_price_vnd(symbol=symbol, start_time=start_time, end_time=end_time)
+        except Exception as e:
+            logger.error(f"{e=}", exc_info=True)
+            actual_df = pd.DataFrame()
     model, scaler = load_model(symbol, model_type, model_path)
 
     test_dataset = DatasetCustom(
