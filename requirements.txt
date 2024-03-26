@@ -1,5 +1,6 @@
 --extra-index-url https://download.pytorch.org/whl/cpu
 
+-e ./
 altair==5.2.0 ; python_version >= "3.9" and python_full_version != "3.9.7" and python_version < "4.0"
 attrs==23.2.0 ; python_version >= "3.9" and python_full_version != "3.9.7" and python_version < "4.0"
 blinker==1.7.0 ; python_version >= "3.9" and python_full_version != "3.9.7" and python_version < "4.0"
